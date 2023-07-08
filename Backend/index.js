@@ -41,7 +41,6 @@ app.post('/signup', async (req, res) => {
         if (user.length === 0) {
             const salt = await bcrypt.genSalt(10)
             const secPassword = await bcrypt.hash(req.body.password, salt)
-            console.log(secPassword);
             req.body = {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
@@ -85,9 +84,16 @@ app.get('/login/:email/:password', async (req, res) => {
     const client = await MongoClient.connect(dbUrl)
     try {
         const db = await client.db('Sylvr')
-        let user = await db.collection('All_Users').aggregate([{ $match: { email: req.params.email, password: req.params.password } }]).toArray()
+        let user = await db.collection('All_Users').aggregate([{ $match: { email: req.params.email } }]).toArray()
+        console.log(user);
         if (user.length !== 0) {
-            res.status(200).send({ message: 'Login Successful', data: user })
+            const correctPassword = await bcrypt.compare(req.params.password, user[0].password)
+            if (correctPassword) {
+                res.status(200).send({ message: 'Login Successful', data: user })
+            }
+            else {
+                res.send({ message: 'Invalid credentials' })
+            }
         }
         else {
             res.send({ message: 'Invalid credentials' })
