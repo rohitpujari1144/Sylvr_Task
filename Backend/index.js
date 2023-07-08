@@ -8,6 +8,7 @@ app.use(express.json())
 const dbUrl = 'mongodb+srv://rohit10231:rohitkaranpujari@cluster0.kjynvxt.mongodb.net/?retryWrites=true&w=majority'
 const client = new MongoClient(dbUrl)
 const port = 8500
+const bcrypt = require('bcrypt')
 
 // getting all users
 app.get('/', async (req, res) => {
@@ -38,6 +39,15 @@ app.post('/signup', async (req, res) => {
         const db = await client.db('Sylvr')
         let user = await db.collection('All_Users').aggregate([{ $match: { email: req.body.email } }]).toArray()
         if (user.length === 0) {
+            const salt = await bcrypt.genSalt(10)
+            const secPassword = await bcrypt.hash(req.body.password, salt)
+            console.log(secPassword);
+            req.body = {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                password: secPassword,
+            }
             await db.collection('All_Users').insertOne(req.body)
             res.status(201).send({ message: 'signup successful', data: req.body })
         }
