@@ -69,7 +69,7 @@ app.put('/updateUser/:email', async (req, res) => {
     try {
         const db = await client.db('Sylvr')
         await db.collection('All_Users').updateOne({ email: req.params.email }, { $set: req.body })
-        res.status(200).send({ message: 'Password updated successfully' })
+        res.status(200).send({ message: 'profile updated successfully' })
     }
     catch (error) {
         res.status(400).send({ message: 'Internal server error', error })
@@ -85,9 +85,9 @@ app.get('/login/:email/:password', async (req, res) => {
     try {
         const db = await client.db('Sylvr')
         let user = await db.collection('All_Users').aggregate([{ $match: { email: req.params.email } }]).toArray()
-        console.log(user);
         if (user.length !== 0) {
             const correctPassword = await bcrypt.compare(req.params.password, user[0].password)
+            console.log(correctPassword);
             if (correctPassword) {
                 res.status(200).send({ message: 'Login Successful', data: user })
             }
