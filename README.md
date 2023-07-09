@@ -1,1 +1,2 @@
-
+- Frontend deployed URL: https://sylvr.netlify.app/
+- Backend deployed URL: https://sylvr-task-backend.onrender.com
