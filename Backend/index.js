@@ -4,11 +4,13 @@ const mongodb = require('mongodb')
 const cors = require('cors')
 const app = express()
 app.use(cors())
+const jwt = require('jsonwebtoken')
 app.use(express.json())
 const dbUrl = 'mongodb+srv://rohit10231:rohitkaranpujari@cluster0.kjynvxt.mongodb.net/?retryWrites=true&w=majority'
 const client = new MongoClient(dbUrl)
 const port = 8500
 const bcrypt = require('bcrypt')
+var access_token = "access_token"
 
 // getting all users
 app.get('/', async (req, res) => {
@@ -87,9 +89,14 @@ app.get('/login/:email/:password', async (req, res) => {
         let user = await db.collection('All_Users').aggregate([{ $match: { email: req.params.email } }]).toArray()
         if (user.length !== 0) {
             const correctPassword = await bcrypt.compare(req.params.password, user[0].password)
-            console.log(correctPassword);
             if (correctPassword) {
+                const userDetails = {
+                    email: user[0].email
+                }
+                const accessToken = jwt.sign(userDetails, access_token)
+                user[0].accessToken = accessToken
                 res.status(200).send({ message: 'Login Successful', data: user })
+
             }
             else {
                 res.send({ message: 'Invalid credentials' })
@@ -98,23 +105,6 @@ app.get('/login/:email/:password', async (req, res) => {
         else {
             res.send({ message: 'Invalid credentials' })
         }
-    }
-    catch (error) {
-        res.status(400).send({ message: 'Internal server error', error })
-    }
-    finally {
-        client.close()
-    }
-})
-
-// delete user
-app.delete('/deleteUser/:email', async (req, res) => {
-    const client = await MongoClient.connect(dbUrl)
-    try {
-        const db = await client.db('Sylvr')
-        await db.collection('All_Users').deleteOne({ email: req.params.email })
-        await db.collection('Orders').deleteMany({ email: req.params.email })
-        res.status(200).send({ message: 'user deleted' })
     }
     catch (error) {
         res.status(400).send({ message: 'Internal server error', error })
